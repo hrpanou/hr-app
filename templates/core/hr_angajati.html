@@ -1,0 +1,61 @@
+{% extends 'core/hr_base.html' %}
+{% block title %}Angajați{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{% url 'hr_angajat_creare' %}" class="btn btn-success">+ Adaugă Angajat Nou</a>
+        </div>
+        <form method="get" class="row g-2 mb-3 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Caută după nume, funcție, departament..." value="{{ query }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Caută</button>
+            </div>
+            <div class="col-auto form-check ms-3">
+                <input type="checkbox" class="form-check-input" id="inactivi" name="inactivi" value="1" {% if arata_inactivi %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="inactivi">Arată și angajații inactivi</label>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-dark">
+                    <tr><th>Utilizator</th><th>Funcție</th><th>Departament</th><th>Telefon</th><th>Data Angajării</th>
+                        <th>Acțiuni</th></tr>
+                </thead>
+                <tbody>
+                    {% for profil in page_obj %}
+                    <tr>
+                        <td>{{ profil.user.get_full_name|default:profil.user.username }}</td>
+                        <td>{{ profil.functia }}</td>
+                        <td>{{ profil.departament }}</td>
+                        <td>{{ profil.telefon|default:"-" }}</td>
+                        <td>{{ profil.data_angajare|default:"-" }}</td>
+                        <td>
+                            {% if not profil.activ %}<span class="badge bg-danger me-1">Inactiv</span>{% endif %}
+                            <a href="{% url 'hr_angajat_detaliu' profil.user.id %}" class="btn btn-sm btn-outline-primary">Vezi Fișa</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-3">Niciun angajat găsit.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">Pagina {{ page_obj.number }} din {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.next_page_number }}">Următor</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

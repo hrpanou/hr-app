@@ -1,0 +1,75 @@
+{% extends 'core/hr_base.html' %}
+{% block title %}Concedii{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-3">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="in_asteptare" {% if status_filter == 'in_asteptare' %}selected{% endif %}>În Așteptare</option>
+                    <option value="aprobat" {% if status_filter == 'aprobat' %}selected{% endif %}>Aprobate</option>
+                    <option value="respins" {% if status_filter == 'respins' %}selected{% endif %}>Respinse</option>
+                    <option value="toate" {% if status_filter == 'toate' %}selected{% endif %}>Toate</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="tip" class="form-select" onchange="this.form.submit()">
+                    <option value="toate" {% if tip_filter == 'toate' %}selected{% endif %}>Toate Tipurile</option>
+                    <option value="odihna" {% if tip_filter == 'odihna' %}selected{% endif %}>Odihnă</option>
+                    <option value="medical" {% if tip_filter == 'medical' %}selected{% endif %}>Medical</option>
+                    <option value="fara_plata" {% if tip_filter == 'fara_plata' %}selected{% endif %}>Fără Plată</option>
+                </select>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-dark">
+                    <tr><th>Angajat</th><th>Tip</th><th>Perioadă</th><th>Motiv</th><th>Status</th><th>Acțiuni</th></tr>
+                </thead>
+                <tbody>
+                    {% for cerere in page_obj %}
+                    <tr>
+                        <td>{{ cerere.angajat.get_full_name|default:cerere.angajat.username }}</td>
+                        <td>{{ cerere.get_tip_concediu_display }}</td>
+                        <td>{{ cerere.data_inceput }} → {{ cerere.data_sfarsit }}</td>
+                        <td>{{ cerere.motiv|default:"-" }}</td>
+                        <td>
+                            {% if cerere.status == 'in_asteptare' %}<span class="badge bg-warning text-dark">În Așteptare</span>
+                            {% elif cerere.status == 'aprobat' %}<span class="badge bg-success">Aprobat</span>
+                            {% else %}<span class="badge bg-danger">Respins</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if cerere.status == 'in_asteptare' %}
+                            <form action="{% url 'hr_concediu_actiune' cerere.id 'aproba' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">Aprobă</button>
+                            </form>
+                            <form action="{% url 'hr_concediu_actiune' cerere.id 'respinge' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Respinge</button>
+                            </form>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-3">Nicio cerere găsită.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?status={{ status_filter }}&tip={{ tip_filter }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">Pagina {{ page_obj.number }} din {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?status={{ status_filter }}&tip={{ tip_filter }}&page={{ page_obj.next_page_number }}">Următor</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

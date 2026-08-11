@@ -1,0 +1,89 @@
+{% extends 'core/hr_base.html' %}
+{% block title %}Export Lunar{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0 no-print">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Export Salarizare: {{ luna_nume }} {{ an }}</h4>
+            <div>
+                <a href="{% url 'hr_export_excel' %}?an={{ an }}&luna={{ luna }}" class="btn btn-success">Descarcă Excel</a>
+                <button onclick="window.print()" class="btn btn-outline-secondary">Printează / PDF</button>
+            </div>
+        </div>
+
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <input type="number" class="form-control" name="an" value="{{ an }}" style="width: 100px;">
+            </div>
+            <div class="col-auto">
+                <select name="luna" class="form-select">
+                    {% for i in "123456789012" %}{% endfor %}
+                    <option value="1" {% if luna == 1 %}selected{% endif %}>Ianuarie</option>
+                    <option value="2" {% if luna == 2 %}selected{% endif %}>Februarie</option>
+                    <option value="3" {% if luna == 3 %}selected{% endif %}>Martie</option>
+                    <option value="4" {% if luna == 4 %}selected{% endif %}>Aprilie</option>
+                    <option value="5" {% if luna == 5 %}selected{% endif %}>Mai</option>
+                    <option value="6" {% if luna == 6 %}selected{% endif %}>Iunie</option>
+                    <option value="7" {% if luna == 7 %}selected{% endif %}>Iulie</option>
+                    <option value="8" {% if luna == 8 %}selected{% endif %}>August</option>
+                    <option value="9" {% if luna == 9 %}selected{% endif %}>Septembrie</option>
+                    <option value="10" {% if luna == 10 %}selected{% endif %}>Octombrie</option>
+                    <option value="11" {% if luna == 11 %}selected{% endif %}>Noiembrie</option>
+                    <option value="12" {% if luna == 12 %}selected{% endif %}>Decembrie</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Actualizează</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mt-3">
+    <div class="card-body">
+        <h5 class="d-none d-print-block mb-3">Salarizare: {{ luna_nume }} {{ an }}</h5>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nume</th>
+                        <th>Funcție</th>
+                        <th>Salariu Bază</th>
+                        <th>Total Km</th>
+                        <th>Total Litri</th>
+                        <th>Consum Mediu</th>
+                        <th>De Încasat Curse</th>
+                        <th>Bonus 10%</th>
+                        <th>Bonus Merit</th>
+                        <th>Total Plată</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in randuri %}
+                    <tr>
+                        <td>{{ r.nume }}</td>
+                        <td>{{ r.functia }}</td>
+                        <td>{{ r.salariu_baza }} RON</td>
+                        <td>{{ r.total_km }}</td>
+                        <td>{{ r.total_litri }}</td>
+                        <td>{{ r.consum_mediu }} l/100km</td>
+                        <td>{{ r.de_incasat_curse }} RON</td>
+                        <td>{{ r.bonus_km }} RON</td>
+                        <td>{{ r.bonus_merit }} RON</td>
+                        <td><strong>{{ r.total_plata }} RON</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="10" class="text-center text-muted py-3">Niciun angajat activ găsit.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print, nav, .nav-tabs { display: none !important; }
+}
+</style>
+{% endblock %}

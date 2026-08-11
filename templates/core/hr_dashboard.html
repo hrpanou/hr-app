@@ -1,0 +1,30 @@
+{% extends 'core/hr_base.html' %}
+{% block title %}Dashboard HR{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Angajați</h6>
+                <h2>{{ total_angajati }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Cereri Concediu în Așteptare</h6>
+                <h2 class="{% if cereri_in_asteptare > 0 %}text-warning{% endif %}">{{ cereri_in_asteptare }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Pontaje Astăzi</h6>
+                <h2>{{ pontaje_azi }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

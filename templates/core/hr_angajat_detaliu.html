@@ -1,0 +1,82 @@
+{% extends 'core/hr_base.html' %}
+{% block title %}Fișă Angajat{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h4 class="card-title mb-3">Fișă Angajat: {{ angajat_user.get_full_name|default:angajat_user.username }}</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Funcție:</label>
+                            <input type="text" class="form-control" name="functia" value="{{ profil.functia }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Departament:</label>
+                            <input type="text" class="form-control" name="departament" value="{{ profil.departament }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefon:</label>
+                            <input type="text" class="form-control" name="telefon" value="{{ profil.telefon|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CNP:</label>
+                            <input type="text" class="form-control" name="cnp" value="{{ profil.cnp }}" maxlength="13">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Adresă:</label>
+                            <input type="text" class="form-control" name="adresa" value="{{ profil.adresa }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tip Contract:</label>
+                            <select class="form-select" name="tip_contract">
+                                <option value="determinat" {% if profil.tip_contract == 'determinat' %}selected{% endif %}>Determinat</option>
+                                <option value="nedeterminat" {% if profil.tip_contract == 'nedeterminat' %}selected{% endif %}>Nedeterminat</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Salariu de Bază (RON):</label>
+                            <input type="number" step="0.01" class="form-control" name="salariu_baza" value="{{ profil.salariu_baza }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Data Angajării:</label>
+                            <input type="date" class="form-control" name="data_angajare" value="{{ profil.data_angajare|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Zile Concediu Alocate/An:</label>
+                            <input type="number" class="form-control" name="zile_concediu_alocate" value="{{ profil.zile_concediu_alocate }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4">Salvează Modificările</button>
+                    <a href="{% url 'hr_angajati' %}" class="btn btn-outline-secondary mt-4">Înapoi la Listă</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="card-title">Status Angajat</h6>
+                <p class="mb-2">Zile rămase: <strong class="text-primary fs-5">{{ zile_ramase }}</strong></p>
+                <p class="text-muted small mb-3">{{ zile_folosite }} din {{ profil.zile_concediu_alocate }} zile folosite anul acesta</p>
+                {% if profil.activ %}
+                    <p class="text-success">Activ</p>
+                    <form action="{% url 'hr_angajat_toggle_activ' angajat_user.id %}" method="post" onsubmit="return confirm('Sigur vrei să marchezi acest angajat ca inactiv?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Marchează ca Inactiv</button>
+                    </form>
+                {% else %}
+                    <p class="text-danger">Inactiv {% if profil.data_incetare %}(din {{ profil.data_incetare }}){% endif %}</p>
+                    <form action="{% url 'hr_angajat_toggle_activ' angajat_user.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">Reactivează</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

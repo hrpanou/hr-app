@@ -1,0 +1,40 @@
+{% extends 'core/hr_base.html' %}
+{% block title %}Calendar Concedii{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="?an={{ an_precedent }}&luna={{ luna_precedenta }}" class="btn btn-outline-secondary btn-sm">&laquo; Luna Anterioară</a>
+            <h4 class="mb-0">{{ luna_nume }} {{ an }}</h4>
+            <a href="?an={{ an_urmator }}&luna={{ luna_urmatoare }}" class="btn btn-outline-secondary btn-sm">Luna Următoare &raquo;</a>
+        </div>
+
+        {% if zile_sortate %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Data</th>
+                        <th>Angajați în Concediu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for zi, nume_lista in zile_sortate %}
+                    <tr>
+                        <td><strong>{{ zi }}</strong></td>
+                        <td>
+                            {% for nume in nume_lista %}
+                                <span class="badge bg-info text-dark me-1">{{ nume }}</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-4">Niciun angajat în concediu în această lună.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
