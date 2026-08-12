@@ -78,7 +78,7 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h4 class="card-title text-success mb-3">Pontaj Intrare</h4>
-                        <form action="{% url 'pontaj_intrare' %}" method="post">
+                        <form action="{% url 'pontaj_intrare' %}" method="post" enctype="multipart/form-data" id="form_intrare" onsubmit="return capteazaLocatie('form_intrare')">
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label for="numar_inmatriculare" class="form-label">Număr Înmatriculare:</label>
@@ -88,6 +88,13 @@
                                 <label for="km_plecare" class="form-label">Kilometraj Plecare (km):</label>
                                 <input type="number" class="form-control" id="km_plecare" name="km_plecare" required>
                             </div>
+                            <div class="mb-3">
+                                <label for="poza_intrare" class="form-label">Poză (obligatoriu):</label>
+                                <input type="file" class="form-control" id="poza_intrare" name="poza_intrare" accept="image/*" capture="environment" required>
+                            </div>
+                            <input type="hidden" name="gps_intrare_lat" id="gps_intrare_lat_intrare">
+                            <input type="hidden" name="gps_intrare_lng" id="gps_intrare_lng_intrare">
+                            <div id="status_gps_intrare" class="small text-muted mb-2"></div>
                             <button type="submit" class="btn btn-success w-100">Înregistrează Intrare</button>
                         </form>
                     </div>
@@ -98,7 +105,7 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h4 class="card-title text-danger mb-3">Pontaj Ieșire</h4>
-                        <form action="{% url 'pontaj_iesire' %}" method="post">
+                        <form action="{% url 'pontaj_iesire' %}" method="post" enctype="multipart/form-data" id="form_iesire" onsubmit="return capteazaLocatie('form_iesire')">
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label for="km_sosire" class="form-label">Kilometraj Sosire (km):</label>
@@ -116,6 +123,13 @@
                                     <option value="mixt">Mixt</option>
                                 </select>
                             </div>
+                            <div class="mb-3">
+                                <label for="poza_iesire" class="form-label">Poză (obligatoriu):</label>
+                                <input type="file" class="form-control" id="poza_iesire" name="poza_iesire" accept="image/*" capture="environment" required>
+                            </div>
+                            <input type="hidden" name="gps_iesire_lat" id="gps_iesire_lat_iesire">
+                            <input type="hidden" name="gps_iesire_lng" id="gps_iesire_lng_iesire">
+                            <div id="status_gps_iesire" class="small text-muted mb-2"></div>
                             <button type="submit" class="btn btn-danger w-100">Înregistrează Ieșire</button>
                         </form>
                     </div>
@@ -329,6 +343,42 @@
         function toggleDocumentMedical() {
             const tip = document.getElementById('tip_concediu').value;
             document.getElementById('grup_document_medical').style.display = tip === 'medical' ? 'block' : 'none';
+        }
+
+        function capteazaLocatie(formId) {
+            const form = document.getElementById(formId);
+            if (form.dataset.gpsGata === 'true') {
+                return true;
+            }
+
+            const tip = formId === 'form_intrare' ? 'intrare' : 'iesire';
+            const statusEl = document.getElementById('status_gps_' + tip);
+            const latEl = document.getElementById('gps_' + tip + '_lat_' + tip);
+            const lngEl = document.getElementById('gps_' + tip + '_lng_' + tip);
+
+            if (!navigator.geolocation) {
+                alert('Browserul tău nu suportă localizare GPS. Nu poți trimite pontajul.');
+                return false;
+            }
+
+            statusEl.textContent = 'Se obține locația GPS...';
+
+            navigator.geolocation.getCurrentPosition(
+                function (pozitie) {
+                    latEl.value = pozitie.coords.latitude;
+                    lngEl.value = pozitie.coords.longitude;
+                    statusEl.textContent = 'Locație obținută cu succes.';
+                    form.dataset.gpsGata = 'true';
+                    form.requestSubmit();
+                },
+                function (eroare) {
+                    statusEl.textContent = 'Nu s-a putut obține locația. Permite accesul la locație în browser și încearcă din nou.';
+                    alert('Trebuie să permiți accesul la locație pentru a trimite pontajul.');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+
+            return false;
         }
     </script>
 </body>

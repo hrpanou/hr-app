@@ -130,6 +130,18 @@ def pontaj_intrare(request):
 
         numar_inmatriculare = request.POST.get('numar_inmatriculare', '').strip().upper()
 
+        poza = request.FILES.get('poza_intrare')
+        gps_lat = request.POST.get('gps_intrare_lat', '')
+        gps_lng = request.POST.get('gps_intrare_lng', '')
+
+        if not poza:
+            messages.error(request, "Trebuie să faci o poză pentru a înregistra intrarea.")
+            return redirect('dashboard')
+
+        if not gps_lat or not gps_lng:
+            messages.error(request, "Locația GPS este obligatorie. Permite accesul la locație în browser.")
+            return redirect('dashboard')
+
         pontaj_azi, created = Pontaj.objects.get_or_create(
             angajat=request.user,
             data=azi,
@@ -137,6 +149,9 @@ def pontaj_intrare(request):
                 'ora_intrare': ora_curenta,
                 'km_plecare': km_plecare,
                 'numar_inmatriculare': numar_inmatriculare,
+                'poza_intrare': poza,
+                'gps_intrare_lat': gps_lat,
+                'gps_intrare_lng': gps_lng,
             }
         )
 
@@ -151,9 +166,14 @@ def pontaj_intrare(request):
                 return redirect('dashboard')
             pontaj_azi.km_plecare = km_plecare
             pontaj_azi.numar_inmatriculare = numar_inmatriculare
+            pontaj_azi.poza_intrare = poza
+            pontaj_azi.gps_intrare_lat = gps_lat
+            pontaj_azi.gps_intrare_lng = gps_lng
             if not pontaj_azi.ora_intrare:
                 pontaj_azi.ora_intrare = ora_curenta
             pontaj_azi.save()
+
+        messages.success(request, "Pontaj Intrare înregistrat cu succes.")
 
     return redirect('dashboard')
 
@@ -187,6 +207,18 @@ def pontaj_iesire(request):
 
         tip_traseu = request.POST.get('tip_traseu', 'urban')
 
+        poza = request.FILES.get('poza_iesire')
+        gps_lat = request.POST.get('gps_iesire_lat', '')
+        gps_lng = request.POST.get('gps_iesire_lng', '')
+
+        if not poza:
+            messages.error(request, "Trebuie să faci o poză pentru a înregistra ieșirea.")
+            return redirect('dashboard')
+
+        if not gps_lat or not gps_lng:
+            messages.error(request, "Locația GPS este obligatorie. Permite accesul la locație în browser.")
+            return redirect('dashboard')
+
         pontaj_azi, created = Pontaj.objects.get_or_create(
             angajat=request.user,
             data=azi,
@@ -195,6 +227,9 @@ def pontaj_iesire(request):
                 'km_sosire': km_sosire,
                 'tip_traseu': tip_traseu,
                 'litri_motorina': litri_motorina,
+                'poza_iesire': poza,
+                'gps_iesire_lat': gps_lat,
+                'gps_iesire_lng': gps_lng,
             }
         )
 
@@ -203,7 +238,12 @@ def pontaj_iesire(request):
             pontaj_azi.km_sosire = km_sosire
             pontaj_azi.tip_traseu = tip_traseu
             pontaj_azi.litri_motorina = litri_motorina
+            pontaj_azi.poza_iesire = poza
+            pontaj_azi.gps_iesire_lat = gps_lat
+            pontaj_azi.gps_iesire_lng = gps_lng
             pontaj_azi.save()
+
+        messages.success(request, "Pontaj Ieșire înregistrat cu succes.")
 
     return redirect('dashboard')
 
