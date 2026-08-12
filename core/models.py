@@ -53,29 +53,25 @@ class CerereConcediu(models.Model):
 
 
 class Pontaj(models.Model):
-    TRASEU_CHOICES = [
-        ('urban', 'Urban'),
-        ('extraurban', 'Extraurban'),
-        ('mixt', 'Mixt (Urban + Extraurban)'),
-    ]
     angajat = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pontaje')
     data = models.DateField()
     ora_intrare = models.TimeField(null=True, blank=True)
     ora_iesire = models.TimeField(null=True, blank=True)
-    ore_lucrate = models.DecimalField(max_digits=4, decimal_places=2, default=8.00)
-    # Câmpuri pentru șoferi
-    numar_inmatriculare = models.CharField(max_length=20, blank=True, default='', verbose_name="Număr Înmatriculare")
-    km_plecare = models.PositiveIntegerField(default=0, verbose_name="KM Plecare")
-    km_sosire = models.PositiveIntegerField(default=0, verbose_name="KM Sosire")
-    tip_traseu = models.CharField(max_length=20, choices=TRASEU_CHOICES, default='urban', verbose_name="Tip Traseu")
-    numar_curse = models.PositiveIntegerField(default=1, verbose_name="Număr Curse / Notițe traseu")
-    litri_motorina = models.DecimalField(max_digits=6, decimal_places=2, default=0, verbose_name="Litri Motorină Consumați")
-    poza_intrare = models.ImageField(upload_to='poze_pontaj/', blank=True, null=True, verbose_name="Poză Intrare")
-    gps_intrare_lat = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
-    gps_intrare_lng = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
-    poza_iesire = models.ImageField(upload_to='poze_pontaj/', blank=True, null=True, verbose_name="Poză Ieșire")
-    gps_iesire_lat = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
-    gps_iesire_lng = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
+
+    @property
+    def ore_lucrate(self):
+        if self.ora_intrare and self.ora_iesire:
+            from datetime import datetime, timedelta
+            intrare = datetime.combine(self.data, self.ora_intrare)
+            iesire = datetime.combine(self.data, self.ora_iesire)
+            if iesire < intrare:
+                iesire += timedelta(days=1)
+            diferenta = iesire - intrare
+            return round(diferenta.total_seconds() / 3600, 2)
+        return 0
+
+    def __str__(self):
+        return f"Pontaj {self.angajat.username} - {self.data}"
 
     @property
     def total_km(self):

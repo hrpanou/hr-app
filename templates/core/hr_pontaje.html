@@ -1,7 +1,7 @@
 {% extends 'core/hr_base.html' %}
 {% block title %}Pontaje{% endblock %}
 {% block content %}
-<div class="card shadow-sm border-0">
+<div class="card">
     <div class="card-body">
         <form method="get" class="row g-2 mb-3">
             <div class="col-md-4">
@@ -19,7 +19,7 @@
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead class="table-dark">
-                    <tr><th>Angajat</th><th>Data</th><th>Intrare</th><th>Ieșire</th><th>Km Plecare</th><th>Km Sosire</th><th>Total Km</th><th>De Încasat</th><th>Traseu</th></tr>
+                    <tr><th>Angajat</th><th>Data</th><th>Intrare</th><th>Ieșire</th><th>Ore Lucrate</th></tr>
                 </thead>
                 <tbody>
                     {% for p in page_obj %}
@@ -28,14 +28,10 @@
                         <td>{{ p.data }}</td>
                         <td>{{ p.ora_intrare|time:"H:i"|default:"--" }}</td>
                         <td>{{ p.ora_iesire|time:"H:i"|default:"--" }}</td>
-                        <td>{{ p.km_plecare }}</td>
-                        <td>{{ p.km_sosire }}</td>
-                        <td><strong>{{ p.total_km }} km</strong></td>
-                        <td><span class="text-success fw-bold">{{ p.de_incasat }} RON</span></td>
-                        <td>{{ p.get_tip_traseu_display }}</td>
+                        <td><strong>{{ p.ore_lucrate }} h</strong></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="9" class="text-center text-muted py-3">Niciun pontaj găsit.</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-3">Niciun pontaj găsit.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

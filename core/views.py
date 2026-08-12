@@ -16,7 +16,7 @@ def dashboard(request):
 
     profil, _ = ProfileAngajat.objects.get_or_create(
         user=angajat,
-        defaults={'functia': 'Șofer', 'departament': 'Transport', 'data_angajare': timezone.now().date()}
+        defaults={'functia': 'Angajat', 'departament': 'General', 'data_angajare': timezone.now().date()}
     )
 
     if profil.rol == 'hr':
@@ -47,16 +47,9 @@ def dashboard(request):
     for p in pontaje_raw:
         pontaje.append({
             'data': p.data,
-            'numar_inmatriculare': p.numar_inmatriculare or '--',
             'ora_intrare': p.ora_intrare.strftime('%H:%M') if p.ora_intrare else '--',
             'ora_iesire': p.ora_iesire.strftime('%H:%M') if p.ora_iesire else '--',
-            'km_plecare': p.km_plecare,
-            'km_sosire': p.km_sosire,
-            'total_km': p.total_km,
-            'de_incasat': p.de_incasat,
-            'tip_traseu': p.get_tip_traseu_display() if p.tip_traseu else '--',
-            'litri_motorina': p.litri_motorina,
-            'consum_100km': p.consum_100km,
+            'ore_lucrate': p.ore_lucrate,
         })
 
     azi_local = timezone.localtime(timezone.now()).date()
@@ -65,52 +58,18 @@ def dashboard(request):
         data__year=azi_local.year,
         data__month=azi_local.month,
     )
-
-    sumar_pe_masina = {}
-    total_km_luna = 0
-    total_litri_luna = 0.0
-    total_de_incasat_luna = 0.0
-
-    for p in pontaje_luna:
-        cheie = p.numar_inmatriculare or 'Fără număr'
-        if cheie not in sumar_pe_masina:
-            sumar_pe_masina[cheie] = {'total_km': 0, 'total_litri': 0.0, 'total_de_incasat': 0.0}
-        sumar_pe_masina[cheie]['total_km'] += p.total_km
-        sumar_pe_masina[cheie]['total_litri'] += float(p.litri_motorina or 0)
-        sumar_pe_masina[cheie]['total_de_incasat'] += float(p.de_incasat or 0)
-
-        total_km_luna += p.total_km
-        total_litri_luna += float(p.litri_motorina or 0)
-        total_de_incasat_luna += float(p.de_incasat or 0)
-
-    for cheie, date in sumar_pe_masina.items():
-        date['total_de_incasat'] = round(date['total_de_incasat'], 2)
-        date['total_litri'] = round(date['total_litri'], 2)
-        date['consum_mediu'] = round((date['total_litri'] / date['total_km']) * 100, 2) if date['total_km'] > 0 else 0
-
-    consum_mediu_luna = round((total_litri_luna / total_km_luna) * 100, 2) if total_km_luna > 0 else 0
-    bonus_km = round(total_de_incasat_luna * 0.10, 2) if total_km_luna > 12000 else 0
-    bonus_merit = 800 if (total_km_luna > 0 and consum_mediu_luna < 33) else 0
-
-    sumar_luna = {
-        'pe_masina': sumar_pe_masina,
-        'total_km': total_km_luna,
-        'total_litri': round(total_litri_luna, 2),
-        'consum_mediu': consum_mediu_luna,
-        'total_de_incasat': round(total_de_incasat_luna, 2),
-        'bonus_km': bonus_km,
-        'bonus_merit': bonus_merit,
-        'total_final': round(total_de_incasat_luna + bonus_km + bonus_merit, 2),
-    }
+    total_ore_luna = sum(p.ore_lucrate for p in pontaje_luna)
+    total_zile_lucrate = pontaje_luna.count()
 
     context = {
         'profil': profil,
         'concedii': concedii,
         'pontaje': pontaje,
         'documente': documente,
-        'sumar_luna': sumar_luna,
         'zile_folosite': zile_folosite,
         'zile_ramase': zile_ramase,
+        'total_ore_luna': round(total_ore_luna, 2),
+        'total_zile_lucrate': total_zile_lucrate,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -122,58 +81,17 @@ def pontaj_intrare(request):
         azi = acum_local.date()
         ora_curenta = acum_local.time()
 
-        km_plecare = request.POST.get('km_plecare', 0)
-        try:
-            km_plecare = int(km_plecare)
-        except (TypeError, ValueError):
-            km_plecare = 0
-
-        numar_inmatriculare = request.POST.get('numar_inmatriculare', '').strip().upper()
-
-        poza = request.FILES.get('poza_intrare')
-        gps_lat = request.POST.get('gps_intrare_lat', '')
-        gps_lng = request.POST.get('gps_intrare_lng', '')
-
-        if not poza:
-            messages.error(request, "Trebuie să faci o poză pentru a înregistra intrarea.")
-            return redirect('dashboard')
-
-        if not gps_lat or not gps_lng:
-            messages.error(request, "Locația GPS este obligatorie. Permite accesul la locație în browser.")
-            return redirect('dashboard')
-
         pontaj_azi, created = Pontaj.objects.get_or_create(
             angajat=request.user,
             data=azi,
-            defaults={
-                'ora_intrare': ora_curenta,
-                'km_plecare': km_plecare,
-                'numar_inmatriculare': numar_inmatriculare,
-                'poza_intrare': poza,
-                'gps_intrare_lat': gps_lat,
-                'gps_intrare_lng': gps_lng,
-            }
+            defaults={'ora_intrare': ora_curenta}
         )
 
-        if not created:
-            plate_existenta = pontaj_azi.numar_inmatriculare
-            if plate_existenta and plate_existenta != numar_inmatriculare:
-                messages.error(
-                    request,
-                    f"Ai deja un pontaj azi cu mașina {plate_existenta}. "
-                    "Nu poți schimba mașina în aceeași zi. Contactează HR dacă ai greșit."
-                )
-                return redirect('dashboard')
-            pontaj_azi.km_plecare = km_plecare
-            pontaj_azi.numar_inmatriculare = numar_inmatriculare
-            pontaj_azi.poza_intrare = poza
-            pontaj_azi.gps_intrare_lat = gps_lat
-            pontaj_azi.gps_intrare_lng = gps_lng
-            if not pontaj_azi.ora_intrare:
-                pontaj_azi.ora_intrare = ora_curenta
+        if not created and not pontaj_azi.ora_intrare:
+            pontaj_azi.ora_intrare = ora_curenta
             pontaj_azi.save()
 
-        messages.success(request, "Pontaj Intrare înregistrat cu succes.")
+        messages.success(request, "Pontaj Intrare înregistrat.")
 
     return redirect('dashboard')
 
@@ -185,65 +103,17 @@ def pontaj_iesire(request):
         azi = acum_local.date()
         ora_curenta = acum_local.time()
 
-        km_sosire = request.POST.get('km_sosire', 0)
-        try:
-            km_sosire = int(km_sosire)
-        except (TypeError, ValueError):
-            km_sosire = 0
-
-        litri_motorina = request.POST.get('litri_motorina', 0)
-        try:
-            litri_motorina = float(litri_motorina)
-        except (TypeError, ValueError):
-            litri_motorina = 0
-
-        if litri_motorina > 500:
-            messages.error(request, "Valoare litri nerealistă (peste 500 l pentru o zi). Verifică și introdu din nou.")
-            return redirect('dashboard')
-
-        if km_sosire > 2000000:
-            messages.error(request, "Valoare kilometraj sosire nerealistă. Verifică și introdu din nou.")
-            return redirect('dashboard')
-
-        tip_traseu = request.POST.get('tip_traseu', 'urban')
-
-        poza = request.FILES.get('poza_iesire')
-        gps_lat = request.POST.get('gps_iesire_lat', '')
-        gps_lng = request.POST.get('gps_iesire_lng', '')
-
-        if not poza:
-            messages.error(request, "Trebuie să faci o poză pentru a înregistra ieșirea.")
-            return redirect('dashboard')
-
-        if not gps_lat or not gps_lng:
-            messages.error(request, "Locația GPS este obligatorie. Permite accesul la locație în browser.")
-            return redirect('dashboard')
-
         pontaj_azi, created = Pontaj.objects.get_or_create(
             angajat=request.user,
             data=azi,
-            defaults={
-                'ora_iesire': ora_curenta,
-                'km_sosire': km_sosire,
-                'tip_traseu': tip_traseu,
-                'litri_motorina': litri_motorina,
-                'poza_iesire': poza,
-                'gps_iesire_lat': gps_lat,
-                'gps_iesire_lng': gps_lng,
-            }
+            defaults={'ora_iesire': ora_curenta}
         )
 
         if not created:
             pontaj_azi.ora_iesire = ora_curenta
-            pontaj_azi.km_sosire = km_sosire
-            pontaj_azi.tip_traseu = tip_traseu
-            pontaj_azi.litri_motorina = litri_motorina
-            pontaj_azi.poza_iesire = poza
-            pontaj_azi.gps_iesire_lat = gps_lat
-            pontaj_azi.gps_iesire_lng = gps_lng
             pontaj_azi.save()
 
-        messages.success(request, "Pontaj Ieșire înregistrat cu succes.")
+        messages.success(request, "Pontaj Ieșire înregistrat.")
 
     return redirect('dashboard')
 
@@ -308,6 +178,7 @@ def hr_pontaje(request):
         pontaje_qs = pontaje_qs.filter(angajat_id=angajat_id)
     paginator = Paginator(pontaje_qs, 25)
     page_obj = paginator.get_page(request.GET.get('page'))
+
     angajati = User.objects.filter(profile__rol='angajat').order_by('username')
     context = {
         'page_obj': page_obj,
@@ -559,31 +430,16 @@ def hr_export_lunar(request):
             data__year=an,
             data__month=luna,
         )
-        total_km = 0
-        total_litri = 0.0
-        total_de_incasat = 0.0
-        for p in pontaje_luna:
-            total_km += p.total_km
-            total_litri += float(p.litri_motorina or 0)
-            total_de_incasat += float(p.de_incasat or 0)
-
-        consum_mediu = round((total_litri / total_km) * 100, 2) if total_km > 0 else 0
-        bonus_km = round(total_de_incasat * 0.10, 2) if total_km > 12000 else 0
-        bonus_merit = 800 if (total_km > 0 and consum_mediu < 33) else 0
+        total_ore = sum(p.ore_lucrate for p in pontaje_luna)
+        total_zile = pontaje_luna.count()
         salariu_baza = float(profil.salariu_baza or 0)
-        total_plata = round(salariu_baza + total_de_incasat + bonus_km + bonus_merit, 2)
 
         randuri.append({
             'nume': profil.user.get_full_name() or profil.user.username,
             'functia': profil.functia,
             'salariu_baza': salariu_baza,
-            'total_km': total_km,
-            'total_litri': round(total_litri, 2),
-            'consum_mediu': consum_mediu,
-            'de_incasat_curse': round(total_de_incasat, 2),
-            'bonus_km': bonus_km,
-            'bonus_merit': bonus_merit,
-            'total_plata': total_plata,
+            'total_zile_lucrate': total_zile,
+            'total_ore_lucrate': round(total_ore, 2),
         })
 
     context = {
@@ -612,7 +468,7 @@ def hr_export_excel(request):
     ws = wb.active
     ws.title = f"Salarizare {luna}-{an}"
 
-    headere = ['Nume', 'Funcție', 'Salariu Bază', 'Total Km', 'Total Litri', 'Consum Mediu', 'De Încasat Curse', 'Bonus 10%', 'Bonus Merit', 'Total Plată']
+    headere = ['Nume', 'Funcție', 'Salariu Bază', 'Zile Lucrate', 'Ore Lucrate']
     ws.append(headere)
     for cell in ws[1]:
         cell.font = Font(bold=True, color='FFFFFF')
@@ -620,31 +476,16 @@ def hr_export_excel(request):
 
     for profil in angajati:
         pontaje_luna = Pontaj.objects.filter(angajat=profil.user, data__year=an, data__month=luna)
-        total_km = 0
-        total_litri = 0.0
-        total_de_incasat = 0.0
-        for p in pontaje_luna:
-            total_km += p.total_km
-            total_litri += float(p.litri_motorina or 0)
-            total_de_incasat += float(p.de_incasat or 0)
-
-        consum_mediu = round((total_litri / total_km) * 100, 2) if total_km > 0 else 0
-        bonus_km = round(total_de_incasat * 0.10, 2) if total_km > 12000 else 0
-        bonus_merit = 800 if (total_km > 0 and consum_mediu < 33) else 0
+        total_ore = sum(p.ore_lucrate for p in pontaje_luna)
+        total_zile = pontaje_luna.count()
         salariu_baza = float(profil.salariu_baza or 0)
-        total_plata = round(salariu_baza + total_de_incasat + bonus_km + bonus_merit, 2)
 
         ws.append([
             profil.user.get_full_name() or profil.user.username,
             profil.functia,
             salariu_baza,
-            total_km,
-            round(total_litri, 2),
-            consum_mediu,
-            round(total_de_incasat, 2),
-            bonus_km,
-            bonus_merit,
-            total_plata,
+            total_zile,
+            round(total_ore, 2),
         ])
 
     for coloana in ws.columns:
