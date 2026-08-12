@@ -70,6 +70,12 @@ class Pontaj(models.Model):
     tip_traseu = models.CharField(max_length=20, choices=TRASEU_CHOICES, default='urban', verbose_name="Tip Traseu")
     numar_curse = models.PositiveIntegerField(default=1, verbose_name="Număr Curse / Notițe traseu")
     litri_motorina = models.DecimalField(max_digits=6, decimal_places=2, default=0, verbose_name="Litri Motorină Consumați")
+    poza_intrare = models.ImageField(upload_to='poze_pontaj/', blank=True, null=True, verbose_name="Poză Intrare")
+    gps_intrare_lat = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
+    gps_intrare_lng = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
+    poza_iesire = models.ImageField(upload_to='poze_pontaj/', blank=True, null=True, verbose_name="Poză Ieșire")
+    gps_iesire_lat = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
+    gps_iesire_lng = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
 
     @property
     def total_km(self):
