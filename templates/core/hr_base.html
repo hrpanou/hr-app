@@ -5,47 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Panou HR{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f4f6f9; }
+        .card { border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .navbar-brand { font-weight: 600; }
+        .hr-nav .nav-link { color: #495057; font-weight: 500; white-space: nowrap; }
+        .hr-nav .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+        .hr-nav { overflow-x: auto; flex-wrap: nowrap; }
+        @media (max-width: 768px) {
+            .hr-nav .nav-link { font-size: 14px; padding: 8px 10px; }
+            .container-fluid { padding-left: 12px; padding-right: 12px; }
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <nav class="navbar navbar-dark bg-dark shadow-sm">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">Panou HR</span>
+        <div class="container-fluid px-3">
+            <span class="navbar-brand mb-0"><i class="bi bi-buildings me-2"></i>Panou HR</span>
             <div class="d-flex align-items-center">
-                <span class="text-white me-3">{{ request.user.username }}</span>
+                <span class="text-white-50 me-3 d-none d-sm-inline"><i class="bi bi-person-circle me-1"></i>{{ request.user.username }}</span>
                 <form action="{% url 'logout' %}" method="post" class="d-inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-light btn-sm">Deconectare</button>
+                    <button type="submit" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i></button>
                 </form>
             </div>
         </div>
     </nav>
 
     <div class="bg-white border-bottom shadow-sm">
-        <div class="container-fluid">
-            <ul class="nav nav-tabs border-0">
+        <div class="container-fluid px-3">
+            <ul class="nav hr-nav">
                 <li class="nav-item">
-                    <a class="nav-link {% if active_menu == 'dashboard' %}active{% endif %}" href="{% url 'hr_dashboard' %}">Dashboard</a>
+                    <a class="nav-link {% if active_menu == 'dashboard' %}active{% endif %}" href="{% url 'hr_dashboard' %}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active_menu == 'angajati' %}active{% endif %}" href="{% url 'hr_angajati' %}">Angajați</a>
+                    <a class="nav-link {% if active_menu == 'angajati' %}active{% endif %}" href="{% url 'hr_angajati' %}"><i class="bi bi-people me-1"></i>Angajați</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active_menu == 'pontaje' %}active{% endif %}" href="{% url 'hr_pontaje' %}">Pontaj</a>
+                    <a class="nav-link {% if active_menu == 'pontaje' %}active{% endif %}" href="{% url 'hr_pontaje' %}"><i class="bi bi-clock-history me-1"></i>Pontaj</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active_menu == 'concedii' %}active{% endif %}" href="{% url 'hr_concedii' %}">Concedii</a>
+                    <a class="nav-link {% if active_menu == 'concedii' %}active{% endif %}" href="{% url 'hr_concedii' %}"><i class="bi bi-calendar-event me-1"></i>Concedii</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active_menu == 'calendar' %}active{% endif %}" href="{% url 'hr_calendar_concedii' %}">Calendar</a>
+                    <a class="nav-link {% if active_menu == 'calendar' %}active{% endif %}" href="{% url 'hr_calendar_concedii' %}"><i class="bi bi-calendar3 me-1"></i>Calendar</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active_menu == 'export' %}active{% endif %}" href="{% url 'hr_export_lunar' %}">Export</a>
+                    <a class="nav-link {% if active_menu == 'export' %}active{% endif %}" href="{% url 'hr_export_lunar' %}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Export</a>
                 </li>
             </ul>
         </div>
     </div>
 
-    <div class="container-fluid my-4">
+    <div class="container-fluid px-3 my-4">
         {% if messages %}
             {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
